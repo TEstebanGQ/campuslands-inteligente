@@ -67,7 +67,11 @@ class AnomalyNotifierPlugin(BasePlugin):
         await InMemoryKeyValueStore.set(
             "anomalias",
             f"{aula_id}:{tipo_alerta}",
-            {"enviado_en": datetime.now(timezone.utc).isoformat()},
+            {
+                "aula_id": aula_id,
+                "tipo_alerta": tipo_alerta,
+                "enviado_en": datetime.now(timezone.utc).isoformat(),
+            },
         )
 
     @staticmethod

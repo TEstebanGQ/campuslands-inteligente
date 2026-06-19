@@ -8,7 +8,9 @@ from core.fiftyone_manager import get_fiftyone_manager
 from core.event_bus import get_event_bus
 from core.persistence import init_db
 from agents.orchestrator.graph import start_event_listener
-from api.routes import chat, admin
+from api.routes import chat, admin, simulate
+from fastapi.responses import FileResponse, HTMLResponse
+import os
 
 
 @asynccontextmanager
@@ -41,8 +43,12 @@ app = FastAPI(title="Campuslands Inteligente", lifespan=lifespan)
 # Incluir routers bajo el prefijo /api/v1
 app.include_router(chat.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
+app.include_router(simulate.router, prefix="/api/v1")
 
 
 @app.get("/")
 def read_root():
-    return {"status": "running", "project": "Campuslands Inteligente"}
+    static_file = "static/index.html"
+    if os.path.exists(static_file):
+        return FileResponse(static_file)
+    return HTMLResponse("<h1>Campuslands Inteligente</h1><p>Archivo static/index.html no encontrado.</p>")

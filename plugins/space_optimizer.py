@@ -24,7 +24,15 @@ class SpaceOptimizerPlugin(BasePlugin):
         tasas.append(tasa_actual)
         tasas = tasas[-self.MAX_HISTORICAL_READINGS:]
 
-        await InMemoryKeyValueStore.set("ocupacion_historica", aula_id, {"tasas": tasas})
+        await InMemoryKeyValueStore.set(
+            "ocupacion_historica",
+            aula_id,
+            {
+                "tasas": tasas,
+                "aula_id": aula_id,
+                "readings": [{"aula_id": aula_id, "tasa": t} for t in tasas],
+            },
+        )
 
         promedio_tasa = sum(tasas) / len(tasas)
 

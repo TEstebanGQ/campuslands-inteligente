@@ -30,4 +30,4 @@ async def test_space_optimizer_uses_accumulated_average_for_recommendation() -> 
     assert second_result["tasa_actual"] == 1.0
     assert second_result["tasa_utilizacion"] == 0.55
     assert second_result["recomendacion"] == "sin_accion_requerida"
-    assert history == {"tasas": [0.1, 1.0]}
+    assert history["tasas"] == [0.1, 1.0]

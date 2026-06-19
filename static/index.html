@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campuslands Inteligente — Panel de Control y Orquestador</title>
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0d12;
+            --panel-bg: rgba(22, 28, 45, 0.4);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            
+            /* Glowing Accent Colors */
+            --accent-cyan: #00e5ff;
+            --accent-purple: #8a2be2;
+            --accent-green: #00e676;
+            --accent-amber: #ffd600;
+            --accent-red: #ff3d00;
+            
+            --shadow-cyan: rgba(0, 229, 255, 0.25);
+            --shadow-purple: rgba(138, 43, 226, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(138, 43, 226, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 229, 255, 0.08) 0%, transparent 40%);
+        }
+
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* LEFT PANEL: Chat Conversational */
+        .chat-panel {
+            width: 45%;
+            height: 100%;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            background-color: rgba(11, 13, 18, 0.6);
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-header .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--accent-green);
+            background: rgba(0, 230, 118, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 230, 118, 0.2);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-green);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+
+        .chat-controls {
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .control-group select, .control-group input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .control-group select:focus, .control-group input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .message {
+            max-width: 85%;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.student {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .message.agent {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            padding: 12px 18px;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .message.student .message-bubble {
+            background: linear-gradient(135deg, var(--accent-cyan), #00b0ff);
+            color: #0b0d12;
+            font-weight: 500;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.agent .message-bubble {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-sender {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        /* Collapsible Tool Log inside chat bubble */
+        .tool-trace {
+            margin-top: 8px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+
+        .tool-trace-header {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--accent-purple);
+            font-weight: bold;
+            user-select: none;
+        }
+
+        .tool-trace-header:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .tool-trace-body {
+            padding: 10px;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            display: none;
+            white-space: pre-wrap;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .tool-trace-body.active {
+            display: block;
+        }
+
+        .chat-input-area {
+            padding: 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 14px 18px;
+            border-radius: 12px;
+            outline: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .chat-input-area input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+        }
+
+        .chat-input-area button {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: #0b0d12;
+            border: none;
+            padding: 0 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.2);
+        }
+
+        .chat-input-area button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.35);
+        }
+
+        /* RIGHT PANEL: Admin Dashboard */
+        .dashboard-panel {
+            width: 55%;
+            height: 100%;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            background-color: rgba(22, 28, 45, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 3px solid var(--accent-cyan);
+            padding-left: 8px;
+        }
+
+        /* Metrics grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .metric-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 229, 255, 0.3);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        /* Simulator Card */
+        .simulator-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .simulator-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .simulator-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+        }
+
+        .simulator-btn.btn-atento:hover {
+            background: rgba(0, 230, 118, 0.15);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.1);
+        }
+
+        .simulator-btn.btn-distraido:hover {
+            background: rgba(255, 214, 0, 0.15);
+            border-color: var(--accent-amber);
+            color: var(--accent-amber);
+            box-shadow: 0 0 10px rgba(255, 214, 0, 0.1);
+        }
+
+        .simulator-btn.btn-ausente:hover {
+            background: rgba(255, 61, 0, 0.15);
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+            box-shadow: 0 0 10px rgba(255, 61, 0, 0.1);
+        }
+
+        /* Alerts List */
+        .alerts-container {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            max-height: 240px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            border-left: 4px solid var(--accent-amber);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .alert-item.posible_desercion_sesion {
+            border-left-color: var(--accent-red);
+            background: rgba(255, 61, 0, 0.03);
+        }
+
+        .alert-item.baja_atencion_grupal {
+            border-left-color: var(--accent-amber);
+            background: rgba(255, 214, 0, 0.03);
+        }
+
+        .alert-info h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .alert-info p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .alert-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            padding: 24px;
+        }
+
+        /* Space Optimizations Table */
+        .spaces-container {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .space-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .space-row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .space-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .space-rate {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+
+        .space-rec {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.35;
+        }
+
+        /* FiftyOne Panel Direct Link */
+        .fo-shortcut-card {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.15), rgba(0, 229, 255, 0.05));
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            padding: 24px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .fo-shortcut-info h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .fo-shortcut-info p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .fo-btn {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            color: var(--text-main);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.25);
+            transition: all 0.2s;
+        }
+
+        .fo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 229, 255, 0.35);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- CHAT INTERFACE PANEL (LEFT) -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <h1>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-cyan);"><path d="M12 2a10 10 0 0 0-7.74 16.34l-1.64 4.82 4.82-1.64A10 10 0 1 0 12 2z"/></svg>
+                    Cognitive Orchestrator
+                </h1>
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>ONLINE</span>
+                </div>
+            </div>
+
+            <!-- Chat Setup controls -->
+            <div class="chat-controls">
+                <div class="control-group">
+                    <label for="chat-role">Rol:</label>
+                    <select id="chat-role">
+                        <option value="estudiante">Estudiante</option>
+                        <option value="administrador">Administrador</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="chat-user">ID Usuario:</label>
+                    <input type="text" id="chat-user" value="estudiante_1" size="10">
+                </div>
+                <div class="control-group">
+                    <label for="chat-classroom">Aula:</label>
+                    <select id="chat-classroom">
+                        <option value="304">Aula 304</option>
+                        <option value="305">Aula 305</option>
+                        <option value="101">Aula 101</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Messages lists -->
+            <div class="messages-container" id="chat-messages">
+                <div class="message agent">
+                    <div class="message-sender">SISTEMA</div>
+                    <div class="message-bubble">
+                        ¡Hola! Soy el Cognitive Orchestrator de Campuslands Inteligente. Pregúntame sobre tu asistencia, promedio de notas o solicita un diagnóstico de optimización de espacio.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input area -->
+            <form class="chat-input-area" id="chat-form">
+                <input type="text" id="chat-input" placeholder="Escribe tu consulta aquí (ej. ¿cómo voy este mes?)..." required autocomplete="off">
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+
+        <!-- ADMIN DASHBOARD PANEL (RIGHT) -->
+        <div class="dashboard-panel">
+            <!-- Header Metrics -->
+            <div>
+                <h2 class="section-title">Métricas de Campuslands</h2>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-label">Muestras Visuales FiftyOne</span>
+                        <span class="metric-value" id="metric-samples">0</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Asistencias en SQLite</span>
+                        <span class="metric-value" id="metric-asistencias">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classroom Camera Simulator widget -->
+            <div class="simulator-card">
+                <h2 class="section-title" style="border-left-color: var(--accent-purple);">Simulador de Cámara RTSP</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -10px;">
+                    Simula la ingesta de un frame visual en un aula para inyectarlo en el sistema en tiempo real.
+                </p>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div class="control-group" style="flex: 1;">
+                        <label for="sim-classroom">Seleccionar Aula:</label>
+                        <select id="sim-classroom" style="width: 100%;">
+                            <option value="304">Aula 304</option>
+                            <option value="305">Aula 305</option>
+                            <option value="101">Aula 101</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="simulator-controls">
+                    <button class="simulator-btn btn-atento" onclick="simulateFrame('atento')">Simular ATENTO</button>
+                    <button class="simulator-btn btn-distraido" onclick="simulateFrame('distraído')">Simular DISTRAÍDO</button>
+                    <button class="simulator-btn btn-ausente" onclick="simulateFrame('ausente')">Simular AUSENTE</button>
+                </div>
+            </div>
+
+            <!-- Active Alerts widget -->
+            <div>
+                <h2 class="section-title" style="border-left-color: var(--accent-red);">Alertas Físicas de Aulas (Anomalías)</h2>
+                <div class="alerts-container" id="alerts-list">
+                    <div class="empty-state">No hay anomalías reportadas en este momento.</div>
+                </div>
+            </div>
+
+            <!-- Space Optimizer Recommendations widget -->
+            <div>
+                <h2 class="section-title" style="border-left-color: var(--accent-amber);">Optimización de Uso de Espacios</h2>
+                <div class="spaces-container" id="spaces-list">
+                    <div class="empty-state">No hay datos históricos cargados para el aula seleccionada. Simula frames para ver optimizaciones.</div>
+                </div>
+            </div>
+
+            <!-- FiftyOne Dashboard Shortcut -->
+            <div class="fo-shortcut-card">
+                <div class="fo-shortcut-info">
+                    <h3>Auditoría Visual Semántica</h3>
+                    <p>Inspecciona las muestras, embeddings y centroides en la app web de FiftyOne.</p>
+                </div>
+                <a href="http://localhost:5151/" target="_blank" class="fo-btn">Abrir FiftyOne</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLIENT JAVASCRIPT LOGIC -->
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatRole = document.getElementById('chat-role');
+        const chatUser = document.getElementById('chat-user');
+        const chatClassroom = document.getElementById('chat-classroom');
+
+        const metricSamples = document.getElementById('metric-samples');
+        const metricAsistencias = document.getElementById('metric-asistencias');
+        const alertsList = document.getElementById('alerts-list');
+        const spacesList = document.getElementById('spaces-list');
+        
+        // Sync selectors
+        chatRole.addEventListener('change', () => {
+            chatUser.value = chatRole.value === 'administrador' ? 'admin_1' : 'estudiante_1';
+        });
+
+        // 1. Submit Chat Form
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageText = chatInput.value.trim();
+            if (!messageText) return;
+
+            // Append Student message to UI
+            appendMessage(chatRole.value === 'administrador' ? 'Administrador' : 'Estudiante', messageText, 'student');
+            chatInput.value = '';
+
+            try {
+                // Call chat API endpoint
+                const response = await fetch('/api/v1/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: messageText,
+                        usuario_id: chatUser.value,
+                        rol: chatRole.value,
+                        aula_id: chatClassroom.value
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Append Agent response
+                appendMessage('Cognitive Orchestrator', data.respuesta, 'agent', data.tool_executions);
+            } catch (err) {
+                appendMessage('Sistema', `Error de conexión: ${err.message}`, 'agent');
+            }
+        });
+
+        function appendMessage(sender, text, type, toolExecutions = []) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', type);
+
+            const senderDiv = document.createElement('div');
+            msgDiv.classList.add('message', type);
+            senderDiv.classList.add('message-sender');
+            senderDiv.textContent = sender.toUpperCase();
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.classList.add('message-bubble');
+            bubbleDiv.textContent = text;
+
+            msgDiv.appendChild(senderDiv);
+            msgDiv.appendChild(bubbleDiv);
+
+            // If there are tool executions, add them as collapsible logs
+            if (toolExecutions && toolExecutions.length > 0) {
+                toolExecutions.forEach((exec, idx) => {
+                    const traceDiv = document.createElement('div');
+                    traceDiv.classList.add('tool-trace');
+
+                    const header = document.createElement('div');
+                    header.classList.add('tool-trace-header');
+                    header.innerHTML = `<span>🛠️ Tool: ${exec.plugin_name} (${exec.success ? 'Éxito' : 'Fallo'})</span><span>▼</span>`;
+                    
+                    const body = document.createElement('div');
+                    body.classList.add('tool-trace-body');
+                    body.textContent = JSON.stringify(exec.result, null, 2);
+
+                    header.addEventListener('click', () => {
+                        body.classList.toggle('active');
+                    });
+
+                    traceDiv.appendChild(header);
+                    traceDiv.appendChild(body);
+                    msgDiv.appendChild(traceDiv);
+                });
+            }
+
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 2. Simulate RTSP Camera Frame
+        async function simulateFrame(estadoVisual) {
+            const simClassroom = document.getElementById('sim-classroom').value;
+            
+            try {
+                const response = await fetch('/api/v1/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        aula_id: simClassroom,
+                        estado_visual: estadoVisual,
+                        estudiante_id: chatUser.value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Show notification bubble in chat
+                appendMessage('Sistema (Cámara)', data.message, 'agent');
+                
+                // Immediately refresh dashboard
+                refreshDashboard();
+            } catch (err) {
+                appendMessage('Sistema (Cámara)', `Error al simular frame: ${err.message}`, 'agent');
+            }
+        }
+
+        // 3. Refresh Admin Dashboard variables
+        async function refreshDashboard() {
+            try {
+                // Fetch metrics
+                const responseDb = await fetch('/api/v1/admin/dashboard');
+                const dataDb = await responseDb.json();
+                metricSamples.textContent = dataDb.fiftyone.total_samples || 0;
+                metricAsistencias.textContent = dataDb.database.total_asistencias_registradas || 0;
+
+                // Fetch active anomaly alerts
+                const responseAlerts = await fetch('/api/v1/admin/alerts');
+                const dataAlerts = await responseAlerts.json();
+                
+                if (dataAlerts.alertas && dataAlerts.alertas.length > 0) {
+                    alertsList.innerHTML = '';
+                    dataAlerts.alertas.forEach(alert => {
+                        const alertDiv = document.createElement('div');
+                        alertDiv.classList.add('alert-item');
+                        
+                        // Determinar tipo de clase de alerta
+                        if (alert.tipo_alerta) {
+                            alertDiv.classList.add(alert.tipo_alerta);
+                        }
+                        
+                        // Formatear timestamp
+                        const date = new Date(alert.enviado_en);
+                        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        
+                        alertDiv.innerHTML = `
+                            <div class="alert-info">
+                                <h4>Alerta: ${alert.tipo_alerta.replace(/_/g, ' ').toUpperCase()}</h4>
+                                <p>Aula ${alert.aula_id || '304'}: Cooldown activo.</p>
+                            </div>
+                            <div class="alert-time">${timeStr}</div>
+                        `;
+                        alertsList.appendChild(alertDiv);
+                    });
+                } else {
+                    alertsList.innerHTML = '<div class="empty-state">No hay anomalías reportadas en este momento.</div>';
+                }
+
+                // Fetch physical space utilization trends
+                const responseSpaces = await fetch('/api/v1/admin/spaces');
+                const dataSpaces = await responseSpaces.json();
+                
+                if (dataSpaces.historial_ocupacion && dataSpaces.historial_ocupacion.length > 0) {
+                    spacesList.innerHTML = '';
+                    dataSpaces.historial_ocupacion.forEach(space => {
+                        // get last reading or average
+                        const readings = space.readings || [];
+                        if (readings.length === 0) return;
+                        const lastReading = readings[readings.length - 1];
+                        const aulaId = lastReading.aula_id || '304';
+                        
+                        // Calculate average rate
+                        const avgRate = readings.reduce((acc, r) => acc + r.tasa, 0) / readings.length;
+                        const pctStr = (avgRate * 100).toFixed(1);
+                        
+                        // Generate recommendation message based on average rate
+                        let recommendationMsg = '';
+                        if (avgRate < 0.30) {
+                            recommendationMsg = `Se recomienda reasignar el aula ${aulaId} a un grupo más pequeño o consolidar clases debido a baja utilización.`;
+                        } else if (avgRate > 0.90) {
+                            recommendationMsg = `Se recomienda reubicar el grupo del aula ${aulaId} a un espacio de mayor capacidad por sobredemanda.`;
+                        } else {
+                            recommendationMsg = `El uso del espacio del aula ${aulaId} se encuentra optimizado. No se requiere ninguna acción correctiva.`;
+                        }
+
+                        const spaceDiv = document.createElement('div');
+                        spaceDiv.classList.add('space-row');
+                        spaceDiv.innerHTML = `
+                            <div class="space-row-header">
+                                <span class="space-title">Aula ${aulaId}</span>
+                                <span class="space-rate">Utilización: ${pctStr}%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: ${pctStr}%;"></div>
+                            </div>
+                            <div class="space-rec">${recommendationMsg}</div>
+                        `;
+                        spacesList.appendChild(spaceDiv);
+                    });
+                } else {
+                    spacesList.innerHTML = '<div class="empty-state">No hay datos históricos cargados para el aula seleccionada. Simula frames para ver optimizaciones.</div>';
+                }
+
+            } catch (err) {
+                console.error("Fallo al refrescar el dashboard:", err);
+            }
+        }
+
+        // 4. Initial call and background refreshes
+        refreshDashboard();
+        setInterval(refreshDashboard, 3000);
+    </script>
+</body>
+</html>
