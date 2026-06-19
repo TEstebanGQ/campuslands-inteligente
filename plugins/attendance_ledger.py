@@ -42,13 +42,13 @@ class AttendanceLedgerPlugin(BasePlugin):
                     "mensaje": "La asistencia ya estaba registrada para hoy"
                 }
 
-            # Insert new attendance record
+            # Insert new attendance record (idempotent via INSERT OR IGNORE)
             stmt = insert(Asistencia).values(
                 estudiante_id=estudiante_id,
                 fecha=fecha_hoy,
                 hora_registro=hora_hoy,
                 aula_id=aula_id
-            )
+            ).prefix_with("OR IGNORE")
             await conn.execute(stmt)
 
         return {
