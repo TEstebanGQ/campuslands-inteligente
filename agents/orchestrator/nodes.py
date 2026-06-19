@@ -229,7 +229,7 @@ async def router_node(state: AgentState) -> AgentState:
     llm = _build_llm()
     mensajes = [SystemMessage(content=_SYSTEM_PROMPT), *state.messages]
     respuesta = await llm.ainvoke(mensajes)
-    state.messages = [respuesta]
+    state.messages = [*state.messages, respuesta]
     state.tool_calls_pendientes = respuesta.tool_calls or []
     return state
 
