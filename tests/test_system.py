@@ -25,6 +25,12 @@ from sqlalchemy import select
 async def setup_test_db():
     await init_db()
 
+    # Respaldar mock_academic_data.json si existe
+    backup_path = "simulation/mock_academic_data.json.bak"
+    has_backup = os.path.exists("simulation/mock_academic_data.json")
+    if has_backup:
+        os.rename("simulation/mock_academic_data.json", backup_path)
+
     # Escribir archivo de datos académicos simulados temporal para los tests
     data = {
         "estudiantes": {
@@ -46,6 +52,10 @@ async def setup_test_db():
         os.remove("simulation/mock_academic_data.json")
     except Exception:
         pass
+
+    # Restaurar el respaldo original
+    if has_backup:
+        os.rename(backup_path, "simulation/mock_academic_data.json")
 
 
 @pytest.mark.asyncio

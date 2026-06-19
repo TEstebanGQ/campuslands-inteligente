@@ -65,17 +65,34 @@ class MockChatOpenAI:
                 f"Resultados: {'; '.join(tool_responses)}"
             )
         else:
-            if "asistencia" in last_msg or "registrar_asistencia" in last_msg or "evento de visión" in last_msg:
-                estudiante_id = "estudiante_1"
-                for word in last_msg.replace(":", " ").replace(",", " ").split():
-                    if word.startswith("estudiante_") or word.isdigit():
-                        estudiante_id = word if word.startswith("estudiante_") else f"estudiante_{word}"
-                
-                aula_id = "304"
-                for word in last_msg.split():
-                    if word.isdigit() and not word.startswith("estudiante"):
-                        aula_id = word
+            cleaned_msg = last_msg.replace(":", " ").replace(",", " ").replace(".", " ").replace("?", " ").replace("¿", " ")
+            words = cleaned_msg.split()
 
+            # Helper to find student ID
+            estudiante_id = "estudiante_1"
+            for i, word in enumerate(words):
+                if word.startswith("estudiante_"):
+                    estudiante_id = word
+                    break
+                elif word == "estudiante" and i + 1 < len(words):
+                    next_word = words[i+1]
+                    if next_word.isdigit():
+                        estudiante_id = f"estudiante_{next_word}"
+                        break
+                    elif next_word.startswith("estudiante_"):
+                        estudiante_id = next_word
+                        break
+
+            # Helper to find classroom/aula ID
+            aula_id = "304"
+            for i, word in enumerate(words):
+                if word == "aula" and i + 1 < len(words):
+                    next_word = words[i+1]
+                    if next_word.isdigit():
+                        aula_id = next_word
+                        break
+
+            if "asistencia" in last_msg or "registrar_asistencia" in last_msg or "evento de visión" in last_msg:
                 estado_visual = "atento"
                 if "ausente" in last_msg:
                     estado_visual = "ausente"
@@ -90,11 +107,6 @@ class MockChatOpenAI:
                 })
 
             elif "analitica" in last_msg or "analítica" in last_msg or "riesgo" in last_msg or "desempeño" in last_msg or "notas" in last_msg or "cómo voy" in last_msg or "como voy" in last_msg:
-                estudiante_id = "estudiante_1"
-                for word in last_msg.replace(":", " ").replace(",", " ").split():
-                    if word.startswith("estudiante_") or word.isdigit():
-                        estudiante_id = word if word.startswith("estudiante_") else f"estudiante_{word}"
-
                 tool_calls.append({
                     "name": "consultar_analitica_estudiante",
                     "args": {"estudiante_id": estudiante_id},
@@ -103,31 +115,43 @@ class MockChatOpenAI:
                 })
 
             elif "anomalia" in last_msg or "anomalía" in last_msg or "alerta" in last_msg:
-                aula_id = "304"
-                for word in last_msg.split():
-                    if word.isdigit():
-                        aula_id = word
-                
                 estado_visual = "ausente"
                 if "distraido" in last_msg or "distraído" in last_msg:
                     estado_visual = "distraído"
 
+                duracion = 20
+                for i, word in enumerate(words):
+                    if word == "minutos" and i - 1 >= 0:
+                        prev_word = words[i-1]
+                        if prev_word.isdigit():
+                            duracion = int(prev_word)
+                            break
+
                 tool_calls.append({
                     "name": "evaluar_anomalia",
-                    "args": {"aula_id": aula_id, "estado_visual": estado_visual, "duracion_minutos": 20},
+                    "args": {"aula_id": aula_id, "estado_visual": estado_visual, "duracion_minutos": duracion},
                     "id": "call_anomalia",
                     "type": "tool_call"
                 })
 
             elif "optimizar" in last_msg or "espacio" in last_msg or "ocupacion" in last_msg or "ocupación" in last_msg or "capacidad" in last_msg:
-                aula_id = "304"
-                for word in last_msg.split():
-                    if word.isdigit():
-                        aula_id = word
+                ocupacion_actual = 8
+                capacidad_maxima = 25
+                for i, word in enumerate(words):
+                    if (word == "ocupación" or word == "ocupacion") and i + 1 < len(words):
+                        for next_w in words[i+1:]:
+                            if next_w.isdigit():
+                                ocupacion_actual = int(next_w)
+                                break
+                    if word == "capacidad" and i + 1 < len(words):
+                        for next_w in words[i+1:]:
+                            if next_w.isdigit():
+                                capacidad_maxima = int(next_w)
+                                break
 
                 tool_calls.append({
                     "name": "optimizar_espacio",
-                    "args": {"aula_id": aula_id, "ocupacion_actual": 8, "capacidad_maxima": 25},
+                    "args": {"aula_id": aula_id, "ocupacion_actual": ocupacion_actual, "capacidad_maxima": capacidad_maxima},
                     "id": "call_espacio",
                     "type": "tool_call"
                 })
@@ -165,19 +189,74 @@ async def router_node(state: AgentState) -> AgentState:
 
 
 async def ejecutar_herramienta_node(state: AgentState) -> AgentState:
-    tool_node = ToolNode(CATALOGO_DE_HERRAMIENTAS)
-    resultado = await tool_node.ainvoke({"messages": state.messages})
+    tool_calls = state.tool_calls_pendientes
+    tool_map = {t.name: t for t in CATALOGO_DE_HERRAMIENTAS}
+    new_messages = list(state.messages)
 
-    for tool_message in resultado["messages"]:
-        if isinstance(tool_message, ToolMessage):
-            state.registrar_ejecucion(
-                ToolExecutionRecord(
-                    plugin_name=tool_message.name or "desconocido",
-                    arguments={},
-                    result={"contenido": tool_message.content},
+    for tool_call in tool_calls:
+        name = tool_call["name"]
+        args = tool_call["args"]
+        call_id = tool_call["id"]
+
+        tool_func = tool_map.get(name)
+        if tool_func:
+            try:
+                result = await tool_func.ainvoke(args)
+                result_str = json.dumps(result)
+
+                new_messages.append(
+                    ToolMessage(
+                        content=result_str,
+                        name=name,
+                        tool_call_id=call_id
+                    )
+                )
+
+                state.registrar_ejecucion(
+                    ToolExecutionRecord(
+                        plugin_name=name,
+                        arguments=args,
+                        result=result,
+                        success=True
+                    )
+                )
+            except Exception as e:
+                new_messages.append(
+                    ToolMessage(
+                        content=f"Error executing tool {name}: {str(e)}",
+                        name=name,
+                        tool_call_id=call_id
+                    )
+                )
+                state.registrar_ejecucion(
+                    ToolExecutionRecord(
+                        plugin_name=name,
+                        arguments=args,
+                        result={},
+                        success=False,
+                        error_message=str(e)
+                    )
+                )
+        else:
+            err_msg = f"Tool {name} not found in catalog."
+            new_messages.append(
+                ToolMessage(
+                    content=err_msg,
+                    name=name,
+                    tool_call_id=call_id
                 )
             )
-    state.messages = resultado["messages"]
+            state.registrar_ejecucion(
+                ToolExecutionRecord(
+                    plugin_name=name,
+                    arguments=args,
+                    result={},
+                    success=False,
+                    error_message=err_msg
+                )
+            )
+
+    state.messages = new_messages
     state.tool_calls_pendientes = []
     return state
 
