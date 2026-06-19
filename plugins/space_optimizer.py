@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any
 from core.persistence import InMemoryKeyValueStore
 from plugins.base import BasePlugin
 
 class SpaceOptimizerPlugin(BasePlugin):
     name = "space_optimizer"
+    MAX_HISTORICAL_READINGS = 10
 
     async def execute(
         self, *, aula_id: str, ocupacion_actual: int, capacidad_maxima: int
@@ -16,50 +16,30 @@ class SpaceOptimizerPlugin(BasePlugin):
 
         tasa_actual = ocupacion_actual / capacidad_maxima
 
-        # Fetch historical readings for smoothing
         history_record = await InMemoryKeyValueStore.get("ocupacion_historica", aula_id)
-        if history_record is None:
-            readings = []
+        tasas = []
+        if history_record is not None:
+            tasas = history_record.get("tasas", [])
+
+        tasas.append(tasa_actual)
+        tasas = tasas[-self.MAX_HISTORICAL_READINGS:]
+
+        await InMemoryKeyValueStore.set("ocupacion_historica", aula_id, {"tasas": tasas})
+
+        promedio_tasa = sum(tasas) / len(tasas)
+
+        if promedio_tasa < 0.30:
+            recomendacion = "reasignar_espacio_menor"
+        elif promedio_tasa > 0.90:
+            recomendacion = "evaluar_reubicacion_mayor_capacidad"
         else:
-            readings = history_record.get("readings", [])
-
-        # Add new reading and limit historical tracking to last 5 entries
-        readings.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "ocupacion": ocupacion_actual,
-            "capacidad": capacidad_maxima,
-            "tasa": tasa_actual
-        })
-        readings = readings[-5:]
-
-        await InMemoryKeyValueStore.set("ocupacion_historica", aula_id, {"readings": readings})
-
-        # Calculate average utilization
-        avg_tasa = sum(r["tasa"] for r in readings) / len(readings)
-
-        # Decide action based on thresholds
-        requiere_accion = False
-        if avg_tasa < 0.30:
-            recomendacion = (
-                f"La tasa de utilización promedio es de {avg_tasa * 100:.1f}%. "
-                f"Se recomienda reasignar el aula {aula_id} a un grupo más pequeño o consolidar clases."
-            )
-            requiere_accion = True
-        elif avg_tasa > 0.90:
-            recomendacion = (
-                f"La tasa de utilización promedio es de {avg_tasa * 100:.1f}%. "
-                f"Se recomienda reubicar el grupo a un aula de mayor capacidad."
-            )
-            requiere_accion = True
-        else:
-            recomendacion = (
-                f"La tasa de utilización promedio es de {avg_tasa * 100:.1f}%. "
-                f"El espacio físico del aula {aula_id} está óptimamente utilizado."
-            )
+            recomendacion = "sin_accion_requerida"
 
         return {
             "aula_id": aula_id,
-            "tasa_utilizacion": round(avg_tasa, 3),
+            "tasa_utilizacion": round(promedio_tasa, 3),
+            "tasa_actual": round(tasa_actual, 3),
+            "lecturas_acumuladas": len(tasas),
             "recomendacion": recomendacion,
-            "requiere_accion": requiere_accion
+            "requiere_accion": recomendacion != "sin_accion_requerida"
         }
