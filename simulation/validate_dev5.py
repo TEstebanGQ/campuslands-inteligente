@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import date, time
 from core.persistence import init_db, get_sqlite_engine, Asistencia
 from sqlalchemy import insert
 from plugins.student_analytics import StudentAnalyticsPlugin
@@ -19,8 +20,8 @@ async def validate():
         for day in range(1, 15):
             stmt = insert(Asistencia).values(
                 estudiante_id="estudiante_1",
-                fecha=f"2026-06-{day:02d}",
-                hora_registro="08:00:00",
+                fecha=date(2026, 6, day),
+                hora_registro=time(8, 0, 0),
                 aula_id="304",
             )
             await conn.execute(stmt)

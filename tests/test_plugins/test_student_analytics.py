@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import json
 import pytest
+from datetime import date, time
 from sqlalchemy import insert
 from core.persistence import init_db, get_sqlite_engine, Asistencia
 from plugins.student_analytics import StudentAnalyticsPlugin
@@ -53,8 +54,8 @@ async def test_student_analytics_risk_levels():
             for day in range(1, 15):
                 stmt = insert(Asistencia).values(
                     estudiante_id="est_bajo",
-                    fecha=f"2026-06-{day:02d}",
-                    hora_registro="08:00:00",
+                    fecha=date(2026, 6, day),
+                    hora_registro=time(8, 0, 0),
                     aula_id="304",
                 )
                 await conn.execute(stmt)
@@ -63,8 +64,8 @@ async def test_student_analytics_risk_levels():
             for day in range(1, 9):
                 stmt = insert(Asistencia).values(
                     estudiante_id="est_medio",
-                    fecha=f"2026-06-{day:02d}",
-                    hora_registro="08:00:00",
+                    fecha=date(2026, 6, day),
+                    hora_registro=time(8, 0, 0),
                     aula_id="304",
                 )
                 await conn.execute(stmt)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+import pytest_asyncio
 import os
 import json
 import asyncio
@@ -21,7 +22,7 @@ from langchain_core.messages import HumanMessage
 from sqlalchemy import select
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest_asyncio.fixture(scope="module", autouse=True)
 async def setup_test_db():
     await init_db()
 
