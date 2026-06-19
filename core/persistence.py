@@ -1,8 +1,8 @@
 import asyncio
 from typing import Any, Optional
+from sqlalchemy import Column, String, Date, Time, Integer, DateTime, UniqueConstraint
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, String, DateTime, UniqueConstraint
 
 Base = declarative_base()
 
@@ -10,9 +10,9 @@ class Asistencia(Base):
     __tablename__ = "asistencias"
 
     estudiante_id = Column(String, primary_key=True)
-    fecha = Column(String, primary_key=True)  # YYYY-MM-DD
-    hora_registro = Column(String, nullable=False)  # HH:MM:SS
-    aula_id = Column(String, nullable=False)
+    fecha = Column(Date, primary_key=True)  # YYYY-MM-DD
+    hora_registro = Column(Time, nullable=False)  # HH:MM:SS
+    aula_id = Column(Integer, nullable=False)
 
     __table_args__ = (
         UniqueConstraint("estudiante_id", "fecha", name="uq_estudiante_fecha"),
