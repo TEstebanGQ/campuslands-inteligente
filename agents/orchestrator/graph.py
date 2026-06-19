@@ -13,7 +13,11 @@ logger = logging.getLogger("campuslands.orchestrator")
 
 
 def _hay_tools_pendientes(state: AgentState) -> str:
-    return "ejecutar_herramienta" if state.tool_calls_pendientes else "responder"
+    if isinstance(state, dict):
+        tool_calls = state.get("tool_calls_pendientes", [])
+    else:
+        tool_calls = state.tool_calls_pendientes
+    return "ejecutar_herramienta" if tool_calls else "responder"
 
 
 def build_orchestrator_graph():
@@ -29,7 +33,7 @@ def build_orchestrator_graph():
         _hay_tools_pendientes,
         {"ejecutar_herramienta": "ejecutar_herramienta", "responder": "responder"},
     )
-    graph.add_edge("ejecutar_herramienta", "router")
+    graph.add_edge("ejecutar_herramienta", "responder")
     graph.add_edge("responder", END)
 
     return graph.compile()
@@ -38,10 +42,25 @@ def build_orchestrator_graph():
 _compiled_graph = None
 
 
+class OrchestratorGraphRunner:
+    async def ainvoke(self, state: AgentState | dict) -> dict:
+        if isinstance(state, dict):
+            current_state = AgentState(**state)
+        else:
+            current_state = state
+
+        current_state = await router_node(current_state)
+        if current_state.tool_calls_pendientes:
+            current_state = await ejecutar_herramienta_node(current_state)
+
+        current_state = await responder_node(current_state)
+        return current_state.model_dump()
+
+
 def get_orchestrator_graph():
     global _compiled_graph
     if _compiled_graph is None:
-        _compiled_graph = build_orchestrator_graph()
+        _compiled_graph = OrchestratorGraphRunner()
     return _compiled_graph
 
 
@@ -52,16 +71,23 @@ async def start_event_listener(event_bus: EventBus) -> None:
     """
     graph = get_orchestrator_graph()
     async for vision_event in event_bus.subscribe():
+        estudiante_context = (
+            f" estudiante {vision_event.estudiante_id}"
+            if vision_event.estudiante_id
+            else ""
+        )
         initial_state = AgentState(
             session_id=f"vision-{vision_event.aula_id}-{vision_event.timestamp.isoformat()}",
             origen="vision_event",
             vision_event_id=vision_event.id,
             aula_id=vision_event.aula_id,
+            usuario_id=vision_event.estudiante_id,
             messages=[
                 HumanMessage(
                     content=(
                         f"Evento de visión recibido en aula {vision_event.aula_id}: "
-                        f"estado={vision_event.estado}, confianza={vision_event.confidence:.2f}."
+                        f"{estudiante_context} estado={vision_event.estado.value}, "
+                        f"confianza={vision_event.confidence:.2f}."
                     )
                 )
             ],

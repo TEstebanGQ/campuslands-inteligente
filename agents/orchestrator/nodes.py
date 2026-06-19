@@ -6,7 +6,6 @@ from typing import Any
 
 from langchain_core.messages import SystemMessage, ToolMessage, AIMessage
 from langchain_openai import ChatOpenAI
-from langgraph.prebuilt import ToolNode
 
 from agents.orchestrator.state import AgentState, ToolExecutionRecord
 from agents.orchestrator.tools import CATALOGO_DE_HERRAMIENTAS
@@ -15,10 +14,10 @@ from shared.config import get_settings
 logger = logging.getLogger("campuslands.orchestrator.nodes")
 
 _SYSTEM_PROMPT = (
-    "Eres el Cognitive Orchestrator de Campuslands Inteligente. "
+    "Eres el orquestador de cámaras de Campuslands Inteligente. "
     "Tu trabajo es decidir, a partir de eventos de visión o mensajes "
-    "de chat, qué herramientas del catálogo deben ejecutarse para "
-    "resolver la necesidad del estudiante o del administrador. "
+    "de chat, qué herramientas del catálogo deben ejecutarse para automatizar "
+    "el monitoreo de aulas, asistencia, inasistencias, retardos y alertas. "
     "Nunca inventes datos académicos o de asistencia: siempre que "
     "necesites un dato del sistema, usa la herramienta correspondiente "
     "en lugar de asumirlo."
@@ -28,7 +27,7 @@ _SYSTEM_PROMPT = (
 class MockChatOpenAI:
     """
     Mock LLM que realiza Tool Calling basado en reglas simples para cuando
-    no hay una API key de OpenAI válida configurada.
+    no hay una API key de proveedor LLM válida configurada.
     """
     def __init__(self, model: str, temperature: float) -> None:
         self.model = model
@@ -92,12 +91,14 @@ class MockChatOpenAI:
                         aula_id = next_word
                         break
 
-            if "asistencia" in last_msg or "registrar_asistencia" in last_msg or "evento de visión" in last_msg:
-                estado_visual = "atento"
+            is_vision_event = "evento de visión" in last_msg
+
+            if "asistencia" in last_msg or "registrar_asistencia" in last_msg or is_vision_event:
+                estado_visual = "concentrado"
                 if "ausente" in last_msg:
                     estado_visual = "ausente"
-                elif "distraido" in last_msg or "distraído" in last_msg:
-                    estado_visual = "distraído"
+                elif "break" in last_msg or "descanso" in last_msg or "distraido" in last_msg or "distraído" in last_msg:
+                    estado_visual = "break"
 
                 tool_calls.append({
                     "name": "registrar_asistencia",
@@ -105,6 +106,36 @@ class MockChatOpenAI:
                     "id": "call_asistencia",
                     "type": "tool_call"
                 })
+
+                if is_vision_event:
+                    ocupacion_por_estado = {
+                        "concentrado": 18,
+                        "break": 8,
+                        "ausente": 0,
+                    }
+                    tool_calls.append({
+                        "name": "optimizar_espacio",
+                        "args": {
+                            "aula_id": aula_id,
+                            "ocupacion_actual": ocupacion_por_estado[estado_visual],
+                            "capacidad_maxima": 25,
+                        },
+                        "id": "call_espacio_vision",
+                        "type": "tool_call",
+                    })
+
+                    if estado_visual in {"ausente", "break"}:
+                        duracion = 25 if estado_visual == "break" else 20
+                        tool_calls.append({
+                            "name": "evaluar_anomalia",
+                            "args": {
+                                "aula_id": aula_id,
+                                "estado_visual": estado_visual,
+                                "duracion_minutos": duracion,
+                            },
+                            "id": "call_anomalia_vision",
+                            "type": "tool_call",
+                        })
 
             elif "analitica" in last_msg or "analítica" in last_msg or "riesgo" in last_msg or "desempeño" in last_msg or "notas" in last_msg or "cómo voy" in last_msg or "como voy" in last_msg:
                 tool_calls.append({
@@ -116,8 +147,8 @@ class MockChatOpenAI:
 
             elif "anomalia" in last_msg or "anomalía" in last_msg or "alerta" in last_msg:
                 estado_visual = "ausente"
-                if "distraido" in last_msg or "distraído" in last_msg:
-                    estado_visual = "distraído"
+                if "break" in last_msg or "descanso" in last_msg or "distraido" in last_msg or "distraído" in last_msg:
+                    estado_visual = "break"
 
                 duracion = 20
                 for i, word in enumerate(words):
@@ -157,9 +188,9 @@ class MockChatOpenAI:
                 })
             else:
                 reply_content = (
-                    "¡Hola! Soy el Cognitive Orchestrator de Campuslands Inteligente. "
-                    "Puedo ayudarte a consultar el estado académico/asistencia de estudiantes, "
-                    "evaluar anomalías en aulas o calcular la optimización de espacios físicos."
+                    "¡Hola! Soy el orquestador de cámaras de Campuslands Inteligente. "
+                    "Puedo ayudarte a monitorear cámaras del campus, registrar asistencia automática, "
+                    "detectar aulas ausentes, concentradas o en break, y alertar por inasistencias o retardos."
                 )
 
         return AIMessage(content=reply_content, tool_calls=tool_calls)
@@ -167,6 +198,21 @@ class MockChatOpenAI:
 
 def _build_llm():
     settings = get_settings()
+    if settings.google_api_key:
+        try:
+            from langchain_google_genai import ChatGoogleGenerativeAI
+        except ImportError as exc:
+            raise RuntimeError(
+                "GOOGLE_API_KEY está configurada, pero falta instalar "
+                "langchain-google-genai. Ejecuta: pip install -r requirements.txt"
+            ) from exc
+
+        return ChatGoogleGenerativeAI(
+            model=settings.google_orchestrator_model,
+            temperature=0,
+            google_api_key=settings.google_api_key,
+        ).bind_tools(CATALOGO_DE_HERRAMIENTAS)
+
     if not settings.openai_api_key or settings.openai_api_key.startswith("mock"):
         return MockChatOpenAI(
             model=settings.orchestrator_model,

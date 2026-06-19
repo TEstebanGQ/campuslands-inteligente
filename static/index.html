@@ -10,6 +10,7 @@
         :root {
             --bg-color: #0b0d12;
             --panel-bg: rgba(22, 28, 45, 0.4);
+            --panel-strong: rgba(18, 24, 38, 0.72);
             --border-color: rgba(255, 255, 255, 0.08);
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
@@ -89,6 +90,17 @@
             padding: 4px 10px;
             border-radius: 20px;
             border: 1px solid rgba(0, 230, 118, 0.2);
+        }
+
+        .status-indicator.offline {
+            color: var(--accent-red);
+            background: rgba(255, 61, 0, 0.1);
+            border-color: rgba(255, 61, 0, 0.24);
+        }
+
+        .status-indicator.offline .status-dot {
+            background-color: var(--accent-red);
+            box-shadow: 0 0 8px var(--accent-red);
         }
 
         .status-dot {
@@ -312,6 +324,69 @@
             backdrop-filter: blur(10px);
         }
 
+        .dashboard-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px;
+            background: var(--panel-strong);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .dashboard-title h2 {
+            font-size: 1.25rem;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+
+        .dashboard-title p {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            line-height: 1.45;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s, background 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(0, 229, 255, 0.35);
+            background: rgba(0, 229, 255, 0.08);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.92), rgba(138, 43, 226, 0.88));
+            color: #0b0d12;
+            border-color: transparent;
+        }
+
+        .action-btn:disabled,
+        .simulator-btn:disabled,
+        .chat-input-area button:disabled {
+            opacity: 0.58;
+            cursor: wait;
+            transform: none;
+        }
+
         .section-title {
             font-size: 1.1rem;
             font-weight: 700;
@@ -327,7 +402,7 @@
         /* Metrics grid */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 16px;
         }
 
@@ -367,12 +442,64 @@
         }
 
         .metric-value {
-            font-size: 2.25rem;
+            font-size: 2rem;
             font-weight: 800;
             color: var(--text-main);
             display: flex;
             align-items: baseline;
             gap: 4px;
+        }
+
+        .metric-subtext {
+            color: var(--text-muted);
+            font-size: 0.74rem;
+            line-height: 1.35;
+        }
+
+        .states-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .states-list {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .state-pill {
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .state-pill h3 {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .state-pill strong {
+            display: block;
+            font-size: 1.5rem;
+            color: var(--text-main);
+        }
+
+        .state-pill.concentrado {
+            border-color: rgba(0, 230, 118, 0.24);
+        }
+
+        .state-pill.break {
+            border-color: rgba(255, 214, 0, 0.24);
+        }
+
+        .state-pill.ausente {
+            border-color: rgba(255, 61, 0, 0.24);
         }
 
         /* Simulator Card */
@@ -455,7 +582,7 @@
             background: rgba(255, 61, 0, 0.03);
         }
 
-        .alert-item.baja_atencion_grupal {
+        .alert-item.break_extendido {
             border-left-color: var(--accent-amber);
             background: rgba(255, 214, 0, 0.03);
         }
@@ -582,6 +709,67 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 229, 255, 0.35);
         }
+
+        @media (max-width: 1100px) {
+            body {
+                height: auto;
+                overflow: auto;
+            }
+
+            .app-container {
+                min-height: 100vh;
+                height: auto;
+                flex-direction: column;
+            }
+
+            .chat-panel,
+            .dashboard-panel {
+                width: 100%;
+                height: auto;
+                min-height: 50vh;
+            }
+
+            .chat-panel {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 720px) {
+            .chat-header,
+            .chat-controls,
+            .dashboard-topbar,
+            .fo-shortcut-card,
+            .simulator-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .chat-controls {
+                gap: 10px;
+            }
+
+            .control-group {
+                justify-content: space-between;
+            }
+
+            .metrics-grid,
+            .states-list {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-actions {
+                justify-content: stretch;
+            }
+
+            .action-btn {
+                flex: 1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -592,11 +780,11 @@
             <div class="chat-header">
                 <h1>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-cyan);"><path d="M12 2a10 10 0 0 0-7.74 16.34l-1.64 4.82 4.82-1.64A10 10 0 1 0 12 2z"/></svg>
-                    Cognitive Orchestrator
+                    Campus Camera Orchestrator
                 </h1>
-                <div class="status-indicator">
+                <div class="status-indicator" id="api-status">
                     <span class="status-dot"></span>
-                    <span>ONLINE</span>
+                    <span id="api-status-text">ONLINE</span>
                 </div>
             </div>
 
@@ -628,7 +816,7 @@
                 <div class="message agent">
                     <div class="message-sender">SISTEMA</div>
                     <div class="message-bubble">
-                        ¡Hola! Soy el Cognitive Orchestrator de Campuslands Inteligente. Pregúntame sobre tu asistencia, promedio de notas o solicita un diagnóstico de optimización de espacio.
+                        ¡Hola! Soy el orquestador de cámaras de Campuslands. Puedo monitorear aulas ausentes, concentradas o en break, registrar asistencia automática y alertar por fallas o retardos.
                     </div>
                 </div>
             </div>
@@ -642,26 +830,67 @@
 
         <!-- ADMIN DASHBOARD PANEL (RIGHT) -->
         <div class="dashboard-panel">
+            <div class="dashboard-topbar">
+                <div class="dashboard-title">
+                    <h2>Panel operativo del backend</h2>
+                    <p id="last-sync">Sincronizando servicios de visión, asistencia y orquestación.</p>
+                </div>
+                <div class="dashboard-actions">
+                    <button class="action-btn" id="refresh-btn" type="button">Refrescar</button>
+                    <button class="action-btn primary" id="process-frames-btn" type="button">Procesar frames</button>
+                </div>
+            </div>
+
             <!-- Header Metrics -->
             <div>
                 <h2 class="section-title">Métricas de Campuslands</h2>
                 <div class="metrics-grid">
                     <div class="metric-card">
-                        <span class="metric-label">Muestras Visuales FiftyOne</span>
+                        <span class="metric-label">Estados de aula en FiftyOne</span>
                         <span class="metric-value" id="metric-samples">0</span>
+                        <span class="metric-subtext">muestras visuales</span>
                     </div>
                     <div class="metric-card">
-                        <span class="metric-label">Asistencias en SQLite</span>
+                        <span class="metric-label">Asistencias automáticas</span>
                         <span class="metric-value" id="metric-asistencias">0</span>
+                        <span class="metric-subtext">registros SQLite</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Alertas activas</span>
+                        <span class="metric-value" id="metric-alerts">0</span>
+                        <span class="metric-subtext">cooldown vigente</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Aulas monitoreadas</span>
+                        <span class="metric-value" id="metric-spaces">0</span>
+                        <span class="metric-subtext">historial de ocupación</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="states-panel">
+                <h2 class="section-title">Distribución Visual</h2>
+                <div class="states-list" id="states-list">
+                    <div class="state-pill concentrado">
+                        <h3>Concentrado</h3>
+                        <strong>0</strong>
+                    </div>
+                    <div class="state-pill break">
+                        <h3>Break</h3>
+                        <strong>0</strong>
+                    </div>
+                    <div class="state-pill ausente">
+                        <h3>Ausente</h3>
+                        <strong>0</strong>
                     </div>
                 </div>
             </div>
 
             <!-- Classroom Camera Simulator widget -->
             <div class="simulator-card">
-                <h2 class="section-title" style="border-left-color: var(--accent-purple);">Simulador de Cámara RTSP</h2>
+                <h2 class="section-title" style="border-left-color: var(--accent-purple);">Simulador de Cámaras del Campus</h2>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -10px;">
-                    Simula la ingesta de un frame visual en un aula para inyectarlo en el sistema en tiempo real.
+                    Simula el análisis de una cámara: aula ausente, aula concentrada o aula en break.
                 </p>
                 <div style="display: flex; gap: 12px; align-items: center;">
                     <div class="control-group" style="flex: 1;">
@@ -674,17 +903,17 @@
                     </div>
                 </div>
                 <div class="simulator-controls">
-                    <button class="simulator-btn btn-atento" onclick="simulateFrame('atento')">Simular ATENTO</button>
-                    <button class="simulator-btn btn-distraido" onclick="simulateFrame('distraído')">Simular DISTRAÍDO</button>
-                    <button class="simulator-btn btn-ausente" onclick="simulateFrame('ausente')">Simular AUSENTE</button>
+                    <button class="simulator-btn btn-atento" type="button" onclick="simulateFrame('concentrado')">Aula CONCENTRADA</button>
+                    <button class="simulator-btn btn-distraido" type="button" onclick="simulateFrame('break')">Aula en BREAK</button>
+                    <button class="simulator-btn btn-ausente" type="button" onclick="simulateFrame('ausente')">Aula AUSENTE</button>
                 </div>
             </div>
 
             <!-- Active Alerts widget -->
             <div>
-                <h2 class="section-title" style="border-left-color: var(--accent-red);">Alertas Físicas de Aulas (Anomalías)</h2>
+                <h2 class="section-title" style="border-left-color: var(--accent-red);">Alertas de Inasistencia y Retardos</h2>
                 <div class="alerts-container" id="alerts-list">
-                    <div class="empty-state">No hay anomalías reportadas en este momento.</div>
+                    <div class="empty-state">No hay fallas, retardos ni breaks extendidos reportados.</div>
                 </div>
             </div>
 
@@ -700,9 +929,9 @@
             <div class="fo-shortcut-card">
                 <div class="fo-shortcut-info">
                     <h3>Auditoría Visual Semántica</h3>
-                    <p>Inspecciona las muestras, embeddings y centroides en la app web de FiftyOne.</p>
+                    <p>Inspecciona los estados del aula, asistencia automática y eventos visuales.</p>
                 </div>
-                <a href="http://localhost:5151/" target="_blank" class="fo-btn">Abrir FiftyOne</a>
+                <a href="http://127.0.0.1:5151/datasets/campuslands_aulas" target="_blank" class="fo-btn" id="fo-link">Abrir FiftyOne</a>
             </div>
         </div>
     </div>
@@ -718,13 +947,67 @@
 
         const metricSamples = document.getElementById('metric-samples');
         const metricAsistencias = document.getElementById('metric-asistencias');
+        const metricAlerts = document.getElementById('metric-alerts');
+        const metricSpaces = document.getElementById('metric-spaces');
         const alertsList = document.getElementById('alerts-list');
         const spacesList = document.getElementById('spaces-list');
+        const statesList = document.getElementById('states-list');
+        const foLink = document.getElementById('fo-link');
+        const apiStatus = document.getElementById('api-status');
+        const apiStatusText = document.getElementById('api-status-text');
+        const lastSync = document.getElementById('last-sync');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const processFramesBtn = document.getElementById('process-frames-btn');
+        const simulatorButtons = document.querySelectorAll('.simulator-btn');
         
         // Sync selectors
         chatRole.addEventListener('change', () => {
             chatUser.value = chatRole.value === 'administrador' ? 'admin_1' : 'estudiante_1';
         });
+
+        refreshBtn.addEventListener('click', () => refreshDashboard());
+        processFramesBtn.addEventListener('click', () => processStoredFrames());
+
+        function setApiStatus(isOnline, detail = '') {
+            apiStatus.classList.toggle('offline', !isOnline);
+            apiStatusText.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            lastSync.textContent = isOnline
+                ? `Última sincronización: ${time}${detail ? ` · ${detail}` : ''}`
+                : `Sin conexión con la API${detail ? ` · ${detail}` : ''}`;
+        }
+
+        function setBusy(button, isBusy, busyText) {
+            if (!button) return;
+            if (isBusy) {
+                if (!button.disabled) {
+                    button.dataset.originalText = button.textContent;
+                }
+                button.textContent = busyText;
+                button.disabled = true;
+                return;
+            }
+            button.textContent = button.dataset.originalText || button.textContent;
+            button.disabled = false;
+        }
+
+        function renderStateDistribution(porEstado = {}) {
+            const normalized = {
+                concentrado: Number(porEstado.concentrado || porEstado.atento || 0),
+                break: Number(porEstado.break || porEstado.distraido || porEstado['distraído'] || 0),
+                ausente: Number(porEstado.ausente || 0),
+            };
+
+            statesList.innerHTML = Object.entries(normalized).map(([estado, total]) => {
+                const label = estado === 'break' ? 'Break' : estado.charAt(0).toUpperCase() + estado.slice(1);
+                return `
+                    <div class="state-pill ${estado}">
+                        <h3>${label}</h3>
+                        <strong>${total}</strong>
+                    </div>
+                `;
+            }).join('');
+        }
 
         // 1. Submit Chat Form
         chatForm.addEventListener('submit', async (e) => {
@@ -750,9 +1033,12 @@
                 });
 
                 const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'No se pudo procesar el mensaje');
+                }
                 
                 // Append Agent response
-                appendMessage('Cognitive Orchestrator', data.respuesta, 'agent', data.tool_executions);
+                appendMessage('Camera Orchestrator', data.respuesta, 'agent', data.tool_executions);
             } catch (err) {
                 appendMessage('Sistema', `Error de conexión: ${err.message}`, 'agent');
             }
@@ -763,7 +1049,6 @@
             msgDiv.classList.add('message', type);
 
             const senderDiv = document.createElement('div');
-            msgDiv.classList.add('message', type);
             senderDiv.classList.add('message-sender');
             senderDiv.textContent = sender.toUpperCase();
 
@@ -805,6 +1090,7 @@
         // 2. Simulate RTSP Camera Frame
         async function simulateFrame(estadoVisual) {
             const simClassroom = document.getElementById('sim-classroom').value;
+            simulatorButtons.forEach((button) => button.disabled = true);
             
             try {
                 const response = await fetch('/api/v1/simulate', {
@@ -818,48 +1104,91 @@
                 });
                 
                 const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'No se pudo simular el frame');
+                }
                 
                 // Show notification bubble in chat
                 appendMessage('Sistema (Cámara)', data.message, 'agent');
                 
                 // Immediately refresh dashboard
                 refreshDashboard();
+                setTimeout(refreshDashboard, 700);
             } catch (err) {
                 appendMessage('Sistema (Cámara)', `Error al simular frame: ${err.message}`, 'agent');
+            } finally {
+                simulatorButtons.forEach((button) => button.disabled = false);
+            }
+        }
+
+        async function processStoredFrames() {
+            setBusy(processFramesBtn, true, 'Procesando...');
+
+            try {
+                const response = await fetch('/api/v1/vision/process-frames', {
+                    method: 'POST',
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'No se pudieron procesar los frames');
+                }
+
+                appendMessage(
+                    'Sistema (Visión)',
+                    `Frames procesados: ${data.total_procesados}. Omitidos: ${data.total_omitidos}.`,
+                    'agent'
+                );
+                setApiStatus(true, `${data.total_procesados} frames procesados`);
+                refreshDashboard();
+                setTimeout(refreshDashboard, 700);
+            } catch (err) {
+                appendMessage('Sistema (Visión)', `Error al procesar frames: ${err.message}`, 'agent');
+                setApiStatus(false, err.message);
+            } finally {
+                setBusy(processFramesBtn, false);
             }
         }
 
         // 3. Refresh Admin Dashboard variables
         async function refreshDashboard() {
+            setBusy(refreshBtn, true, 'Actualizando...');
             try {
                 // Fetch metrics
                 const responseDb = await fetch('/api/v1/admin/dashboard');
+                if (!responseDb.ok) throw new Error('No se pudo cargar el dashboard');
                 const dataDb = await responseDb.json();
-                metricSamples.textContent = dataDb.fiftyone.total_samples || 0;
-                metricAsistencias.textContent = dataDb.database.total_asistencias_registradas || 0;
+                metricSamples.textContent = dataDb.fiftyone?.total_samples || 0;
+                metricAsistencias.textContent = dataDb.database?.total_asistencias_registradas || 0;
+                renderStateDistribution(dataDb.fiftyone?.por_estado || {});
+                if (dataDb.fiftyone?.app_url) {
+                    foLink.href = dataDb.fiftyone.app_url;
+                }
 
                 // Fetch active anomaly alerts
                 const responseAlerts = await fetch('/api/v1/admin/alerts');
+                if (!responseAlerts.ok) throw new Error('No se pudieron cargar las alertas');
                 const dataAlerts = await responseAlerts.json();
+                metricAlerts.textContent = dataAlerts.total_alertas || 0;
                 
                 if (dataAlerts.alertas && dataAlerts.alertas.length > 0) {
                     alertsList.innerHTML = '';
                     dataAlerts.alertas.forEach(alert => {
                         const alertDiv = document.createElement('div');
                         alertDiv.classList.add('alert-item');
+                        const tipoAlerta = alert.tipo_alerta || 'alerta';
                         
                         // Determinar tipo de clase de alerta
-                        if (alert.tipo_alerta) {
-                            alertDiv.classList.add(alert.tipo_alerta);
-                        }
+                        alertDiv.classList.add(tipoAlerta);
                         
                         // Formatear timestamp
                         const date = new Date(alert.enviado_en);
-                        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        const timeStr = Number.isNaN(date.getTime())
+                            ? '--:--:--'
+                            : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                         
                         alertDiv.innerHTML = `
                             <div class="alert-info">
-                                <h4>Alerta: ${alert.tipo_alerta.replace(/_/g, ' ').toUpperCase()}</h4>
+                                <h4>Alerta: ${tipoAlerta.replace(/_/g, ' ').toUpperCase()}</h4>
                                 <p>Aula ${alert.aula_id || '304'}: Cooldown activo.</p>
                             </div>
                             <div class="alert-time">${timeStr}</div>
@@ -867,12 +1196,14 @@
                         alertsList.appendChild(alertDiv);
                     });
                 } else {
-                    alertsList.innerHTML = '<div class="empty-state">No hay anomalías reportadas en este momento.</div>';
+                    alertsList.innerHTML = '<div class="empty-state">No hay fallas, retardos ni breaks extendidos reportados.</div>';
                 }
 
                 // Fetch physical space utilization trends
                 const responseSpaces = await fetch('/api/v1/admin/spaces');
+                if (!responseSpaces.ok) throw new Error('No se pudieron cargar los espacios');
                 const dataSpaces = await responseSpaces.json();
+                metricSpaces.textContent = dataSpaces.total_espacios_monitoreados || 0;
                 
                 if (dataSpaces.historial_ocupacion && dataSpaces.historial_ocupacion.length > 0) {
                     spacesList.innerHTML = '';
@@ -884,8 +1215,9 @@
                         const aulaId = lastReading.aula_id || '304';
                         
                         // Calculate average rate
-                        const avgRate = readings.reduce((acc, r) => acc + r.tasa, 0) / readings.length;
+                        const avgRate = readings.reduce((acc, r) => acc + Number(r.tasa || 0), 0) / readings.length;
                         const pctStr = (avgRate * 100).toFixed(1);
+                        const progressWidth = Math.max(0, Math.min(100, avgRate * 100)).toFixed(1);
                         
                         // Generate recommendation message based on average rate
                         let recommendationMsg = '';
@@ -905,7 +1237,7 @@
                                 <span class="space-rate">Utilización: ${pctStr}%</span>
                             </div>
                             <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" style="width: ${pctStr}%;"></div>
+                                <div class="progress-bar-fill" style="width: ${progressWidth}%;"></div>
                             </div>
                             <div class="space-rec">${recommendationMsg}</div>
                         `;
@@ -915,8 +1247,12 @@
                     spacesList.innerHTML = '<div class="empty-state">No hay datos históricos cargados para el aula seleccionada. Simula frames para ver optimizaciones.</div>';
                 }
 
+                setApiStatus(true);
             } catch (err) {
                 console.error("Fallo al refrescar el dashboard:", err);
+                setApiStatus(false, err.message);
+            } finally {
+                setBusy(refreshBtn, false);
             }
         }
 

@@ -41,7 +41,7 @@ El procesamiento de cualquier estímulo sigue un flujo controlado por una máqui
 El flujo completo de telemetría reactiva en la plataforma se acopla de la siguiente manera utilizando las capacidades distribuidas del repositorio:
 
 1. **Captura y Extracción (`agents/vision/embedding_engine.py`)**: El módulo de visión procesa los frames de las cámaras del aula y genera los vectores de características (embeddings) correspondientes.
-2. **Clasificación y Pipeline (`agents/vision/classifier.py` y `pipeline.py`)**: Clasifica el estado del Camper (atento, distraído, ausente) y publica un `VisionEvent` formal a través del bus de eventos.
+2. **Clasificación y Pipeline (`agents/vision/classifier.py` y `pipeline.py`)**: Clasifica el estado del aula (concentrado, break, ausente) y publica un `VisionEvent` formal a través del bus de eventos.
 3. **Consumo y Orquestación (`agents/orchestrator/graph.py`)**: El listener asíncrono de este módulo intercepta el evento del bus, mapea los datos y arranca la ejecución del grafo para tomar decisiones o alertar de forma autónoma.
 
 ---

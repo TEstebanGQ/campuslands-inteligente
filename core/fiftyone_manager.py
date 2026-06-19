@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
 import fiftyone as fo
@@ -98,13 +99,27 @@ class FiftyOneDatasetManager:
             loop = asyncio.get_running_loop()
 
             def _add_sample_sync() -> str:
-                sample = fo.Sample(filepath=frame_path)
+                target_path = Path(frame_path).resolve()
+                sample = next(
+                    (
+                        existing
+                        for existing in self._dataset
+                        if Path(existing.filepath).resolve() == target_path
+                    ),
+                    None,
+                ) or fo.Sample(filepath=frame_path)
+
                 sample["aula_id"] = aula_id
                 sample["estado"] = estado.value
                 sample["confidence"] = float(confidence)
                 sample["captured_at"] = captured_at.isoformat()
                 sample["embedding"] = embedding.tolist()
-                self._dataset.add_sample(sample)
+
+                if sample.id is None:
+                    self._dataset.add_sample(sample)
+                else:
+                    sample.save()
+
                 self._dataset.save()
                 return sample.id
 
@@ -128,10 +143,14 @@ class FiftyOneDatasetManager:
             return {"total_samples": 0, "por_estado": {}}
 
         counts = self._dataset.count_values("estado")
+        app_url = None
+        if self._session:
+            app_url = f"{self._session.url.rstrip('/')}/datasets/{self.DATASET_NAME}"
+
         return {
             "total_samples": len(self._dataset),
             "por_estado": counts,
-            "app_url": self._session.url if self._session else None,
+            "app_url": app_url,
         }
 
 

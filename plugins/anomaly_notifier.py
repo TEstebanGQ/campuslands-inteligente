@@ -8,7 +8,7 @@ from plugins.base import BasePlugin
 
 _COOLDOWN_MINUTOS = 10
 _UMBRAL_AUSENCIA_MIN = 15
-_UMBRAL_DISTRACCION_MIN = 20
+_UMBRAL_BREAK_MIN = 20
 
 
 class AnomalyNotifierPlugin(BasePlugin):
@@ -49,8 +49,8 @@ class AnomalyNotifierPlugin(BasePlugin):
     def _evaluar_regla(estado_visual: str, duracion_minutos: int) -> str | None:
         if estado_visual == "ausente" and duracion_minutos > _UMBRAL_AUSENCIA_MIN:
             return "posible_desercion_sesion"
-        if estado_visual == "distraído" and duracion_minutos > _UMBRAL_DISTRACCION_MIN:
-            return "baja_atencion_grupal"
+        if estado_visual in {"break", "distraído", "distraido"} and duracion_minutos > _UMBRAL_BREAK_MIN:
+            return "break_extendido"
         return None
 
     @staticmethod
@@ -79,9 +79,10 @@ class AnomalyNotifierPlugin(BasePlugin):
         if tipo_alerta == "posible_desercion_sesion":
             return (
                 f"Aula {aula_id}: ausencia sostenida detectada durante "
-                f"{duracion_minutos} minutos. Posible deserción de la sesión actual."
+                f"{duracion_minutos} minutos. Posible deserción, inasistencia "
+                "o salida de clase sin retorno."
             )
         return (
-            f"Aula {aula_id}: nivel de atención grupal bajo sostenido durante "
-            f"{duracion_minutos} minutos."
+            f"Aula {aula_id}: break extendido detectado durante "
+            f"{duracion_minutos} minutos. Revisar retorno a clase y posibles retardos."
         )

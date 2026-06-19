@@ -8,8 +8,9 @@ class EmbeddingEngine:
     """
     Genera embeddings deterministas para imágenes.
     Para la simulación, si el nombre del archivo contiene palabras clave
-    como 'atento', 'distraido' / 'distraído', o 'ausente', genera un vector
-    muy cercano a los centroides correspondientes para garantizar reproducibilidad.
+    como 'concentrado' / 'atento', 'break' / 'distraído', o 'ausente',
+    genera un vector muy cercano a los centroides correspondientes para
+    garantizar reproducibilidad.
     """
 
     def __init__(self, dimension: int = 128) -> None:
@@ -19,9 +20,9 @@ class EmbeddingEngine:
         filename = os.path.basename(image_path).lower()
 
         # Determinar el seed base según el estado indicado en el nombre de archivo
-        if "atento" in filename:
+        if "concentrado" in filename or "atento" in filename:
             seed = 100
-        elif "distraido" in filename or "distraído" in filename:
+        elif "break" in filename or "distraido" in filename or "distraído" in filename:
             seed = 200
         elif "ausente" in filename:
             seed = 300

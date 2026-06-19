@@ -11,6 +11,10 @@ class VisionEvent(BaseModel):
     estado: AulaEstado = Field(..., description="Classroom visual state")
     confidence: float = Field(..., description="Classification confidence (0 to 1)")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    estudiante_id: Optional[str] = Field(
+        default=None,
+        description="Student identifier associated with the visual event, when available",
+    )
 
 class ClassificationResult(BaseModel):
     estado: AulaEstado

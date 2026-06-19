@@ -44,7 +44,7 @@ class AttendanceLedgerPlugin(BasePlugin):
                     "estudiante_id": estudiante_id,
                     "fecha": fecha_respuesta,
                     "ya_existia": False,
-                    "mensaje": "Estudiante ausente, no se registra asistencia"
+                    "mensaje": "Aula ausente o estudiante no detectado: se marca inasistencia preventiva, no se registra asistencia"
                 }
 
             # Check if attendance already exists
@@ -78,5 +78,5 @@ class AttendanceLedgerPlugin(BasePlugin):
             "estudiante_id": estudiante_id,
             "fecha": fecha_respuesta,
             "ya_existia": False,
-            "mensaje": f"Asistencia registrada exitosamente hoy a las {hora_respuesta} en el aula {aula_id}"
+            "mensaje": f"Asistencia automática registrada hoy a las {hora_respuesta} en el aula {aula_id}"
         }

@@ -30,9 +30,9 @@ async def registrar_asistencia(estudiante_id: str, aula_id: str, estado_visual: 
 async def consultar_analitica_estudiante(estudiante_id: str) -> dict:
     """
     Retorna el resumen académico y de asistencia de un estudiante:
-    porcentaje de asistencia, tendencia de desempeño y nivel de riesgo
-    de deserción. Usar cuando un estudiante pregunta por su propio
-    estado, o cuando un administrador consulta un caso puntual.
+    porcentaje de asistencia, inasistencias estimadas, tendencia de
+    desempeño y nivel de riesgo. Usar cuando un estudiante pregunta por
+    su propio estado, o cuando un administrador consulta un caso puntual.
     """
     return await _analytics_plugin.execute(estudiante_id=estudiante_id)
 
@@ -40,9 +40,8 @@ async def consultar_analitica_estudiante(estudiante_id: str) -> dict:
 @tool
 async def evaluar_anomalia(aula_id: str, estado_visual: str, duracion_minutos: int) -> dict:
     """
-    Evalúa si un patrón visual sostenido (por ejemplo, ausencia
-    prolongada o distracción generalizada) amerita una notificación
-    de alerta temprana al administrador.
+    Evalúa si un patrón visual sostenido (aula ausente o break extendido)
+    amerita una notificación de alerta temprana al administrador.
     """
     return await _anomaly_plugin.execute(
         aula_id=aula_id, estado_visual=estado_visual, duracion_minutos=duracion_minutos

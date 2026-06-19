@@ -56,6 +56,7 @@ class StudentAnalyticsPlugin(BasePlugin):
 
         # Porcentaje de asistencia entre 0.0 y 1.0 (días con registro / días hábiles)
         porcentaje_asistencia = min(1.0, asistencias_db / DIAS_HABILES)
+        inasistencias_estimadas = max(0, DIAS_HABILES - asistencias_db)
 
         # (c) Tomar tendencia_academica directamente del JSON cacheado
         tendencia = student_profile.get("tendencia_declarada", "estable")
@@ -81,12 +82,15 @@ class StudentAnalyticsPlugin(BasePlugin):
             "estudiante_id": estudiante_id,
             "nombre": student_profile["nombre"],
             "porcentaje_asistencia": round(porcentaje_asistencia * 100.0, 1),
+            "inasistencias_estimadas": inasistencias_estimadas,
+            "retardos_estimados": 0,
             "tendencia_academica": tendencia,
             "riesgo_desercion": riesgo,
             "nivel_riesgo": nivel_riesgo,
             "mensaje": (
-                f"El estudiante {student_profile['nombre']} tiene un porcentaje de asistencia de "
-                f"{porcentaje_asistencia * 100.0:.1f}%, tendencia académica '{tendencia}' y nivel de riesgo de deserción "
+                f"El estudiante {student_profile['nombre']} tiene asistencia de "
+                f"{porcentaje_asistencia * 100.0:.1f}%, {inasistencias_estimadas} inasistencias estimadas, "
+                f"0 retardos estimados, tendencia académica '{tendencia}' y nivel de alerta "
                 f"'{nivel_riesgo}' ({riesgo}/100)."
             ),
         }

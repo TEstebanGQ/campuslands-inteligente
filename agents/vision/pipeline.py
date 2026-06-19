@@ -21,7 +21,9 @@ class VisionPipeline:
         self.fiftyone_manager = get_fiftyone_manager()
         self.event_bus = get_event_bus()
 
-    async def process_frame(self, frame_path: str, aula_id: str) -> VisionEvent:
+    async def process_frame(
+        self, frame_path: str, aula_id: str, estudiante_id: str | None = None
+    ) -> VisionEvent:
         # 1. Generación de embedding
         embedding = self.embedding_engine.get_embedding(frame_path)
 
@@ -43,7 +45,8 @@ class VisionPipeline:
             aula_id=aula_id,
             estado=estado,
             confidence=confidence,
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
+            estudiante_id=estudiante_id,
         )
         await self.event_bus.publish(event)
 
