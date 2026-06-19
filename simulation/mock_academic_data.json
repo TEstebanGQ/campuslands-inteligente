@@ -2,33 +2,28 @@
   "estudiantes": {
     "estudiante_1": {
       "nombre": "Camilo Torres",
-      "notas": [4.2, 4.0, 4.3, 4.5],
-      "asistencias_previas": 14,
-      "total_sesiones": 15
+      "promedio_notas_historico": [4.2, 4.0, 4.3, 4.5],
+      "tendencia_declarada": "mejora"
     },
     "estudiante_2": {
       "nombre": "Maria Gomez",
-      "notas": [3.5, 3.2, 2.9, 2.5],
-      "asistencias_previas": 8,
-      "total_sesiones": 15
+      "promedio_notas_historico": [3.5, 3.2, 2.9, 2.5],
+      "tendencia_declarada": "declive"
     },
     "estudiante_3": {
       "nombre": "Carlos Perez",
-      "notas": [3.8, 3.8, 3.9, 3.8],
-      "asistencias_previas": 12,
-      "total_sesiones": 15
+      "promedio_notas_historico": [3.8, 3.8, 3.9, 3.8],
+      "tendencia_declarada": "estable"
     },
     "estudiante_4": {
       "nombre": "Sofia Ruiz",
-      "notas": [4.8, 4.9, 5.0, 5.0],
-      "asistencias_previas": 15,
-      "total_sesiones": 15
+      "promedio_notas_historico": [4.8, 4.9, 5.0, 5.0],
+      "tendencia_declarada": "mejora"
     },
     "estudiante_5": {
       "nombre": "Andres Castro",
-      "notas": [2.8, 3.0, 3.1, 2.7],
-      "asistencias_previas": 6,
-      "total_sesiones": 15
+      "promedio_notas_historico": [2.8, 3.0, 3.1, 2.7],
+      "tendencia_declarada": "declive"
     }
   }
 }

@@ -15,6 +15,8 @@ from tests.test_system import (
     test_classifier_and_embedding,
     test_orchestrator_graph,
 )
+from tests.test_plugins.test_student_analytics import test_student_analytics_risk_levels
+from tests.test_plugins.test_anomaly_notifier import test_anomaly_notifier_cooldown_and_thresholds
 
 
 async def run_all():
@@ -32,9 +34,8 @@ async def run_all():
         "estudiantes": {
             "test_est_1": {
                 "nombre": "Test Student 1",
-                "notas": [4.0, 4.5],
-                "asistencias_previas": 8,
-                "total_sesiones": 10,
+                "promedio_notas_historico": [4.0, 4.5],
+                "tendencia_declarada": "mejora",
             }
         }
     }
@@ -45,11 +46,13 @@ async def run_all():
     tests = [
         ("EventBus PubSub", test_event_bus),
         ("Attendance Ledger Plugin", test_attendance_ledger_plugin),
-        ("Student Analytics Plugin", test_student_analytics_plugin),
-        ("Anomaly Notifier Plugin", test_anomaly_notifier_plugin),
+        ("Student Analytics Plugin (Basic)", test_student_analytics_plugin),
+        ("Anomaly Notifier Plugin (Basic)", test_anomaly_notifier_plugin),
         ("Space Optimizer Plugin", test_space_optimizer_plugin),
         ("Classifier & Embedding Engine", test_classifier_and_embedding),
         ("Cognitive Orchestrator Graph", test_orchestrator_graph),
+        ("Student Analytics Risk Levels", test_student_analytics_risk_levels),
+        ("Anomaly Notifier Thresholds & Cooldown", test_anomaly_notifier_cooldown_and_thresholds),
     ]
 
     failed = False
