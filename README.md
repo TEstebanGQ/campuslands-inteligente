@@ -91,3 +91,12 @@ pytest tests/ -v
 - 🌐 [Portafolio Web](https://portafolio-tegq.netlify.app/)  
 - 🐙 [GitHub: @TEstebanGQ](https://github.com/TEstebanGQ)  
 - 💼 [LinkedIn](https://www.linkedin.com/in/tomas-esteban-gonzalez-quintero/)
+
+---
+
+<div align="center">
+  <br/>
+  <img src="https://raw.githubusercontent.com/TEstebanGQ/TEstebanGQ/main/assets/logo-tegq.jpg" width="80" alt="TEGQ Brand Logo" />
+  <br/>
+  <sub><b>© Tomas Esteban González Quintero — TEGQ</b></sub>
+</div>
