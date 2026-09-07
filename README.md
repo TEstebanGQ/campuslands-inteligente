@@ -86,11 +86,13 @@ pytest tests/ -v
 ---
 
 ## 👨‍💻 Autor
-**Tomas Esteban Gonzalez Quintero**  
-*Full Stack Developer & AI Integrator*  
-- 🌐 [Portafolio Web](https://portafolio-tegq.netlify.app/)  
-- 🐙 [GitHub: @TEstebanGQ](https://github.com/TEstebanGQ)  
+
+**Tomas Esteban Gonzalez Quintero** — *Desarrollador Full Stack*
+
+- 🌐 [Portafolio Web](https://portafolio-tegq.netlify.app/)
+- 🐙 [GitHub: @TEstebanGQ](https://github.com/TEstebanGQ)
 - 💼 [LinkedIn](https://www.linkedin.com/in/tomas-esteban-gonzalez-quintero/)
+- 📧 [Email](mailto:tomasestebangonzalezquintero@gmail.com)
 
 ---
 
