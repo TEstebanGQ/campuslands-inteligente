@@ -89,7 +89,7 @@ pytest tests/ -v
 
 **Tomas Esteban Gonzalez Quintero** — *Desarrollador Full Stack*
 
-- 🌐 [Portafolio Web](https://portafolio-tegq.netlify.app/)
+- 🌐 [Portafolio Web](https://portafolio-tegq-web.netlify.app/)
 - 🐙 [GitHub: @TEstebanGQ](https://github.com/TEstebanGQ)
 - 💼 [LinkedIn](https://www.linkedin.com/in/tomas-esteban-gonzalez-quintero/)
 - 📧 [Email](mailto:tomasestebangonzalezquintero@gmail.com)
